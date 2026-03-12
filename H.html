@@ -1,0 +1,233 @@
+```html
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Love</title>
+
+<style>
+
+body{
+margin:0;
+background:black;
+overflow:hidden;
+cursor:pointer;
+}
+
+canvas{
+position:absolute;
+top:0;
+left:0;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+let stars = [];
+let floatingHearts = [];
+let forming = false;
+
+let mouse = {x:0,y:0};
+
+document.addEventListener("mousemove",e=>{
+mouse.x = e.clientX;
+mouse.y = e.clientY;
+})
+
+function heartEquation(t){
+
+let x = 16*Math.pow(Math.sin(t),3);
+let y = -(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+
+return {x:x*14,y:y*14}
+
+}
+
+/* estrelas */
+
+for(let i=0;i<200;i++){
+
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+size:Math.random()*2
+})
+
+}
+
+/* partículas */
+
+for(let i=0;i<3000;i++){
+
+particles.push({
+
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+vx:(Math.random()-0.5)*0.5,
+vy:(Math.random()-0.5)*0.5,
+tx:0,
+ty:0
+
+})
+
+}
+
+function drawHeart(x,y,size){
+
+ctx.beginPath();
+
+ctx.moveTo(x,y);
+
+ctx.bezierCurveTo(x-size,y-size,x-size*2,y+size/2,x,y+size*2);
+ctx.bezierCurveTo(x+size*2,y+size/2,x+size,y-size,x,y);
+
+ctx.fillStyle="red";
+ctx.shadowBlur=10;
+ctx.shadowColor="red";
+ctx.fill();
+ctx.shadowBlur=0;
+
+}
+
+/* clique */
+
+canvas.addEventListener("click",()=>{
+
+if(forming) return;
+
+forming = true;
+
+particles.forEach((p,i)=>{
+
+let t = (i/particles.length)*Math.PI*2;
+
+let pos = heartEquation(t);
+
+p.tx = canvas.width/2 + pos.x;
+p.ty = canvas.height/2 + pos.y;
+
+})
+
+})
+
+/* corações subindo */
+
+function createFloatingHeart(){
+
+floatingHearts.push({
+
+x:Math.random()*canvas.width,
+y:canvas.height+20,
+size:Math.random()*6+4,
+speed:Math.random()*1+0.6
+
+})
+
+}
+
+setInterval(createFloatingHeart,200);
+
+let pulse = 0;
+
+function animate(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+/* estrelas */
+
+ctx.fillStyle="white";
+
+stars.forEach(s=>{
+ctx.fillRect(s.x,s.y,s.size,s.size)
+})
+
+/* partículas */
+
+particles.forEach(p=>{
+
+let dx = mouse.x - p.x;
+let dy = mouse.y - p.y;
+
+let dist = Math.sqrt(dx*dx + dy*dy);
+
+if(dist < 80){
+
+p.vx -= dx*0.003;
+p.vy -= dy*0.003;
+
+}
+
+if(!forming){
+
+p.x += p.vx;
+p.y += p.vy;
+
+}else{
+
+p.x += (p.tx - p.x)*0.05;
+p.y += (p.ty - p.y)*0.05;
+
+}
+
+if(p.x<0||p.x>canvas.width)p.vx*=-1;
+if(p.y<0||p.y>canvas.height)p.vy*=-1;
+
+drawHeart(p.x,p.y,2)
+
+})
+
+/* coração pulsando */
+
+if(forming){
+
+pulse += 0.05;
+
+ctx.fillStyle="red";
+ctx.font="60px Arial";
+ctx.textAlign="center";
+ctx.shadowBlur=20;
+ctx.shadowColor="red";
+
+ctx.fillText("I ♥ You",canvas.width/2,canvas.height/2+Math.sin(pulse)*5);
+
+ctx.shadowBlur=0;
+
+}
+
+/* corações subindo */
+
+floatingHearts.forEach((h,i)=>{
+
+drawHeart(h.x,h.y,h.size);
+
+h.y -= h.speed;
+
+if(h.y < -20) floatingHearts.splice(i,1)
+
+})
+
+requestAnimationFrame(animate);
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
+```
